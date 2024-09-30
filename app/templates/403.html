@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Permission Denied{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column align-items-center justify-content-center" style="height: 100%;">
+    <div class="text-center">
+        <img src="https://cdn-icons-png.flaticon.com/512/1828/1828665.png" alt="Access Denied Icon" style="width: 100px; height: 100px;" class="mb-4">
+        <h1 class="display-4 text-danger">Permission Denied</h1>
+        <p class="lead mt-4 text-secondary">You do not have the necessary permissions to access this resource.</p>
+        <hr class="my-4" style="width: 50%;">
+        <p class="mb-4 text-muted">
+            If you believe this is a mistake, please contact your administrator or wait for the system to automatically detect your access attempt. Someone will reach out to you shortly.
+        </p>
+        <a href="/" class="btn btn-primary btn-lg">Return to Home</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Связь с поддержкой{% endblock %}
+
+{% block content %}
+<div class="container justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="row justify-content-center w-100">
+        <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+            <div class="card shadow-lg" style="border-radius: 15px; background-color: #f9f9f9;">
+                <div class="card-header bg-primary text-white text-center" style="border-radius: 15px 15px 0 0;">
+                    <h3 class="mb-0">Связаться с поддержкой</h3>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted text-center mb-4">
+                        У вас есть вопрос или проблема? Мы всегда готовы помочь!
+                    </p>
+
+                    <form id="support-form" method="POST" action="/support/send">
+                        <div class="form-group">
+                            <label for="name">Ваше имя</label>
+                            <input type="text" class="form-control" id="name" name="name" placeholder="Введите ваше имя" required style="border-radius: 10px;">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Ваш Email</label>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Введите ваш email" required style="border-radius: 10px;">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="subject">Тема сообщения</label>
+                            <input type="text" class="form-control" id="subject" name="subject" placeholder="Кратко опишите проблему" required style="border-radius: 10px;">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="message">Сообщение</label>
+                            <textarea class="form-control" id="message" name="message" rows="5" placeholder="Опишите вашу проблему" required style="border-radius: 10px;"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block" style="border-radius: 10px;">Отправить</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <p>Или свяжитесь с нами по телефону:</p>
+                <a href="tel:+89642245443" class="btn btn-outline-primary" style="border-radius: 10px; font-size: 18px;">
+                    <i class="fas fa-phone"></i> +8 (964) 224-54-43
+                </a>
+                <p class="mt-2 text-muted">Наши операторы доступны с 9:00 до 18:00 (ИРК).</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Благодарственное сообщение, скрыто по умолчанию -->
+<div id="thank-you-message" class="container text-center" style="display: none; margin-top: 50px;">
+    <h1 class="display-4 text-success">Спасибо за ваше сообщение!</h1>
+    <p class="lead">Мы получили ваше сообщение и скоро с вами свяжемся.</p>
+    <p>Вы будете перенаправлены на главную страницу через <span id="timer">5</span> секунд...</p>
+</div>
+
+<!-- Сообщение об ошибке, скрыто по умолчанию -->
+<div id="error-message" class="container text-center" style="display: none; margin-top: 50px;">
+    <h1 class="display-4 text-danger">Что-то пошло не так</h1>
+    <p class="lead">Не удалось отправить ваше сообщение. Пожалуйста, попробуйте снова позже.</p>
+</div>
+
+<script>
+document.getElementById('support-form').addEventListener('submit', async function(event) {
+    event.preventDefault();  // Останавливаем стандартное поведение формы
+
+    const form = event.target;
+    const formData = new FormData(form);
+
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (response.status === 200) {
+            // Показываем благодарственное сообщение
+            document.getElementById('support-content').style.display = 'none';
+            document.getElementById('thank-you-message').style.display = 'block';
+
+            // Таймер обратного отсчета
+            let countdown = 5;
+            const timerElement = document.getElementById('timer');
+            const interval = setInterval(() => {
+                countdown--;
+                timerElement.textContent = countdown;
+                if (countdown === 0) {
+                    clearInterval(interval);
+                    window.location.href = "/";
+                }
+            }, 1000);
+        } else {
+            // Показываем сообщение об ошибке
+            document.getElementById('support-content').style.display = 'none';
+            document.getElementById('error-message').style.display = 'block';
+        }
+    } catch (error) {
+        // Показываем сообщение об ошибке
+        document.getElementById('support-content').style.display = 'none';
+        document.getElementById('error-message').style.display = 'block';
+    }
+});
+</script>
+{% endblock %}

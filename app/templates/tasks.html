@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.first_name }}'s Tasks{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="my-4">Tasks for {{ user.first_name }} {{ user.last_name }}</h1>
+
+    {% if tasks %}
+        <!-- Вкладки для задач -->
+        <ul class="nav nav-tabs" id="taskTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="active-tasks-tab" data-toggle="tab" href="#active-tasks" role="tab" aria-controls="active-tasks" aria-selected="true">Active Tasks</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="completed-tasks-tab" data-toggle="tab" href="#completed-tasks" role="tab" aria-controls="completed-tasks" aria-selected="false">Archived Tasks</a>
+            </li>
+        </ul>
+
+        <div class="tab-content my-4" id="taskTabsContent">
+            <!-- Активные задачи -->
+            <div class="tab-pane fade show active" id="active-tasks" role="tabpanel" aria-labelledby="active-tasks-tab">
+                {% if tasks|selectattr('is_completed', 'false')|list %}
+                    <div class="row">
+                        {% for task in tasks if not task.is_completed %}
+                            <div class="col-md-4">
+                                <div class="card mb-4 task-card shadow-lg">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h5 class="card-title">{{ task.name }}</h5>
+                                            <span class="badge badge-warning badge-pill">Pending</span>
+                                        </div>
+                                        <p class="card-text text-muted">{{ task.description[:100] }}...</p>
+                                        <p class="card-text">
+                                            <small class="text-muted">Deadline: {{ task.deadline.strftime('%Y-%m-%d %H:%M') }}</small>
+                                        </p>
+                                        <a href="/tasks/{{ task.id }}" class="btn btn-outline-primary btn-block mt-3">View Details</a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="no-tasks-message text-center">
+                        <h2 class="display-4 text-muted">No active tasks</h2>
+                        <p class="lead text-muted">You have no active tasks at the moment. Enjoy your free time!</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Архивные задачи -->
+            <div class="tab-pane fade" id="completed-tasks" role="tabpanel" aria-labelledby="completed-tasks-tab">
+                {% if tasks|selectattr('is_completed', 'true')|list %}
+                    <div class="row">
+                        {% for task in tasks if task.is_completed %}
+                            <div class="col-md-4">
+                                <div class="card mb-4 task-card shadow-lg">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h5 class="card-title">{{ task.name }}</h5>
+                                            <span class="badge badge-success badge-pill">Completed</span>
+                                        </div>
+                                        <p class="card-text text-muted">{{ task.description[:100] }}...</p>
+                                        <p class="card-text">
+                                            <small class="text-muted">Deadline: {{ task.deadline.strftime('%Y-%m-%d %H:%M') }}</small>
+                                        </p>
+                                        <a href="/tasks/{{ task.id }}" class="btn btn-outline-primary btn-block mt-3">View Details</a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="no-tasks-message text-center">
+                        <h2 class="display-4 text-muted">No archived tasks</h2>
+                        <p class="lead text-muted">You haven't completed any tasks yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="no-tasks-message text-center">
+            <h2 class="display-4 text-muted">No tasks available</h2>
+            <p class="lead text-muted">You currently have no tasks assigned. Enjoy your free time!</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .task-card {
+        border: none;
+        border-radius: 15px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .task-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    }
+    .task-card .card-title {
+        font-weight: 600;
+        font-size: 1.25rem;
+        color: #007bff;
+    }
+    .task-card .badge-pill {
+        font-size: 0.9rem;
+        padding: 0.5em 1em;
+    }
+    .task-card .btn-outline-primary {
+        border-color: #007bff;
+        color: #007bff;
+        transition: background-color 0.3s, color 0.3s;
+    }
+    .task-card .btn-outline-primary:hover {
+        background-color: #007bff;
+        color: #fff;
+    }
+    .no-tasks-message {
+        min-height: 50vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    .no-tasks-message h2 {
+        font-size: 2.5rem;
+    }
+</style>
+
+<script>
+    $(function () {
+        $('#taskTabs a').on('click', function (e) {
+            e.preventDefault();
+            $(this).tab('show');
+        });
+    });
+</script>
+{% endblock %}

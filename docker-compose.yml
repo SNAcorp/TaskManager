@@ -1,0 +1,59 @@
+services:
+  db-tasks:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: server
+      POSTGRES_PASSWORD: vdsg24rtkls42djv
+      POSTGRES_DB: tasks
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+  redis-tasks:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app_network
+
+  web-tasks:
+    build: .
+    command: /wait-for-it.sh db-tasks:5432 -- uvicorn app.main:app --host 0.0.0.0 --port 80
+    ports:
+      - "80:80"
+    depends_on:
+      - db-tasks
+      - redis-tasks
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://server:vdsg24rtkls42djv@db-tasks:5432/tasks
+      - PUBLIC_KEY_PATH=public_key.pem
+      - PRIVATE_KEY_PATH=private_key.pem
+      - ALGORITHM=RS256
+      - SECRET_KEY=IOUFh432sad%f1c7243gJ-jisdf%gsfvd3q23/asd&asdc
+      - NOTIFICATION_SECRET_KEY=LPKAF/24tvv98724hbvsl/2-09mvw/
+      - ACCESS_TOKEN_SECRET=lkwjsdnf294fhnvl,s;/1fdm
+      - ACCESS_TOKEN_EXPIRE_MINUTES=600
+      - SPECIAL_TOKEN=klsjdvklsjdf9wndj2jfpa2-ifj232j
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - TELEGRAM_BOT_URL=http://localhost:8012/send_message
+    volumes:
+      - images:/images
+      - logs:/logs
+    networks:
+      - app_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  images:
+    driver: local
+  logs:
+    driver: local
+
+networks:
+  app_network:
+    driver: bridge

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Download Logs{% endblock %}
+
+{% block link %}
+<style>
+    /* General Layout */
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .log-viewer-container {
+        margin-top: 20px;
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+    }
+
+    .log-tile-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        gap: 20px;
+    }
+
+    .log-tile {
+        background-color: #f1f1f1;
+        border-radius: 10px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        padding: 20px;
+        flex: 1;
+        max-width: 250px;
+        transition: transform 0.4s ease, box-shadow 0.4s ease, flex 0.4s ease, opacity 0.4s ease;
+        overflow: hidden;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .log-tile h3 {
+        font-size: 1.5em;
+        margin-bottom: 10px;
+        transition: margin 0.4s ease;
+    }
+
+    .log-tile p {
+        font-size: 1em;
+        color: #666;
+        margin: 0;
+        opacity: 0;
+        height: 0;
+        transition: opacity 0.6s ease, height 0.6s ease;
+    }
+
+    .log-tile a {
+        display: block;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: #fff;
+        border-radius: 5px;
+        text-decoration: none;
+        margin-top: 20px;
+        transition: background-color 0.4s ease;
+    }
+
+    .log-tile a:hover {
+        background-color: #0056b3;
+    }
+
+    .log-tile:hover p {
+        opacity: 1;
+        height: auto;
+    }
+
+    .log-tile:hover h3 {
+        margin-bottom: 20px;
+    }
+
+    .log-tile:hover {
+        flex: 1.5;
+        transform: translateY(-10px);
+        box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .log-tile-container .log-tile:not(:hover) {
+        opacity: 0.6;
+        flex: 0.9;
+    }
+
+    .log-tile-container .log-tile:not(:hover) p {
+        opacity: 0;
+        height: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container log-viewer-container">
+    <h1 class="mb-4">Download Logs</h1>
+
+    <!-- Log Tiles -->
+    <div class="log-tile-container">
+        <div class="log-tile">
+            <h3>App Logs</h3>
+            <p>Application logs capture key events and errors related to the core functionality of the app, helping track and resolve issues.</p>
+            <a href="/logs/download/app" id="download-link-app" download>Download</a>
+        </div>
+        <div class="log-tile">
+            <h3>DB Logs</h3>
+            <p>Database logs contain records of all database queries and transactions, useful for monitoring and debugging database-related operations.</p>
+            <a href="/logs/download/db" id="download-link-db" download>Download</a>
+        </div>
+        <div class="log-tile">
+            <h3>Users Logs</h3>
+            <p>User logs track the actions performed by users within the system, such as logins, data updates, and permissions changes.</p>
+            <a href="/logs/download/users" id="download-link-users" download>Download</a>
+        </div>
+        <div class="log-tile">
+            <h3>Admins Logs</h3>
+            <p>Admin logs provide a detailed record of actions taken by administrators, including system changes and user management activities.</p>
+            <a href="/logs/download/admins" id="download-link-admins" download>Download</a>
+        </div>
+        <div class="log-tile">
+            <h3>Terminals Logs</h3>
+            <p>Terminal logs record interactions and transactions processed through various terminal interfaces, crucial for operational audits.</p>
+            <a href="/logs/download/terminals" id="download-link-terminals" download>Download</a>
+        </div>
+        <div class="log-tile">
+            <h3>System Logs</h3>
+            <p>System logs include critical information about the system's performance, errors, and resource utilization, essential for system maintenance.</p>
+            <a href="/logs/download/system" id="download-link-system" download>Download</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

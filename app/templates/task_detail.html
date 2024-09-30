@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Task Details - {{ task.name }}{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="card border-0 shadow-sm rounded">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+            <h2 class="mb-0 text-dark">{{ task.name }}</h2>
+            <div class="d-flex align-items-center">
+                <span class="badge {{ 'badge-success' if task.is_completed else 'badge-warning' }} p-2" style="font-size: 1rem;">
+                    {{ 'Completed' if task.is_completed else 'In Progress' }}
+                </span>
+                <span class="deadline {{ 'text-danger' if task.is_past_due else 'text-success' }} font-weight-bold ml-3" style="font-size: 1.2rem;">
+                    Deadline: {{ task.deadline.strftime('%Y-%m-%d %H:%M') }}
+                </span>
+            </div>
+        </div>
+        <div class="card-body">
+            <h4 class="h6 text-uppercase text-muted">Description</h4>
+            <p class="text-dark">{{ task.description or "No description available." }}</p>
+
+            <h4 class="h6 text-uppercase text-muted mt-4">Subtasks</h4>
+            <ul class="list-group list-group-flush">
+                {% for subtask in subtasks %}
+                    <li class="list-group-item border-0 px-0 d-flex align-items-center">
+                        <div class="custom-checkbox-wrapper">
+                            <input type="checkbox" class="custom-checkbox" id="subtask{{ subtask.id }}"
+                                   {% if subtask.is_completed %}checked{% endif %}
+                                   {% if task.is_completed %}disabled{% endif %}
+                                   onchange="toggleSubtaskCompletion({{ subtask.id }}, this.checked)">
+                            <label class="custom-checkbox-label" for="subtask{{ subtask.id }}"></label>
+                        </div>
+                        <span class="ml-3 text-dark">{{ subtask.name }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <div class="text-right mt-4">
+                {% if task.is_completed %}
+                    <span class="badge badge-success p-2">Task Completed</span>
+                {% else %}
+                    <button class="btn btn-success" onclick="markTaskAsCompleted({{ task.id }})">Mark as Completed</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Стили для дедлайна */
+    .deadline {
+        font-size: 1.2rem;
+    }
+
+    /* Кастомные чекбоксы для сабтасков */
+    .custom-checkbox-wrapper {
+        position: relative;
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        margin-right: 0.5rem;
+    }
+
+    .custom-checkbox {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .custom-checkbox-label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 24px;
+        width: 24px;
+        background-color: #f1f1f1;
+        border-radius: 4px;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .custom-checkbox:checked + .custom-checkbox-label {
+        background-color: #28a745;
+        box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
+    }
+
+    .custom-checkbox-label:after {
+        content: "";
+        position: absolute;
+        display: none;
+        left: 8px;
+        top: 4px;
+        width: 6px;
+        height: 12px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    .custom-checkbox:checked + .custom-checkbox-label:after {
+        display: block;
+    }
+
+    /* Стили для заблокированных элементов */
+    .custom-checkbox[disabled] + .custom-checkbox-label {
+        background-color: #e9ecef;
+        cursor: not-allowed;
+    }
+
+    .btn[disabled] {
+        background-color: #e9ecef;
+        border-color: #e9ecef;
+        cursor: not-allowed;
+        color: #6c757d;
+    }
+</style>
+
+<script>
+    function toggleSubtaskCompletion(subtaskId, isChecked) {
+        fetch(`/tasks/subtask/${subtaskId}/complete`, {
+            method: 'POST',
+        }).then(response => {
+            if (!response.ok) {
+                alert("Error updating subtask status.");
+            }
+        });
+    }
+
+    function markTaskAsCompleted(taskId) {
+        fetch(`/tasks/task/${taskId}/complete`, {
+            method: 'POST',
+        }).then(response => {
+            if (response.ok) {
+                window.location.reload();
+            } else if (response.status === 400) {
+                alert("Some subtasks have not been completed yet.");
+            } else {
+                alert("Error marking task as completed.");
+            }
+        });
+    }
+</script>
+{% endblock %}

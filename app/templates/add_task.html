@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Assign Task{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Assign a Task</h2>
+
+                    <!-- Поле для поиска и выбора пользователя с использованием Select2 -->
+                    <div class="form-group mb-4">
+                        <label for="user_select">Select or Search User</label>
+                        <select id="user_select" class="form-control" name="user_id" required>
+                            <option value="" selected disabled>Select a user...</option>
+                            {% for id, user in users.items() %}
+                                <option value="{{ id }}">{{ user.first_name }} {{ user.last_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Форма для задания -->
+                    <form id="taskForm" method="post" action="/admin/add-task/" onsubmit="submitForm(event)">
+                        <input type="hidden" id="selected_user_id" name="user_id" required>
+
+                        <div class="form-group mb-4">
+                            <label for="task_name">Task Name</label>
+                            <input type="text" id="task_name" class="form-control" name="name" required />
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="task_description">Task Description</label>
+                            <textarea id="task_description" class="form-control" name="description" rows="3"></textarea>
+                        </div>
+
+                        <!-- Красивый календарь с помощью Flatpickr -->
+                        <div class="form-group mb-4">
+                            <label for="task_deadline">Deadline</label>
+                            <input type="text" id="task_deadline" class="form-control flatpickr" name="deadline" required />
+                        </div>
+
+                        <div id="subtasks_container" class="form-group mb-4">
+                            <!-- Подзадачи будут динамически добавляться -->
+                        </div>
+
+                        <button type="button" class="btn btn-outline-primary mb-3" onclick="addSubtask()">+ Add Subtask</button>
+                        <button type="submit" class="btn btn-success w-100">Assign Task</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Подключаем jQuery полной версии -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Подключаем Select2 для стилизованного выбора с поиском -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<!-- Подключаем Flatpickr -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+// Инициализация Flatpickr для красивого календаря
+document.addEventListener('DOMContentLoaded', function() {
+    flatpickr('.flatpickr', {
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+        minDate: "today",
+        defaultHour: 9,
+        defaultMinute: 0
+    });
+
+    // Инициализация Select2 для поля выбора пользователя с поиском
+    $('#user_select').select2({
+        placeholder: "Select or search a user",
+        allowClear: true
+    });
+});
+
+// Добавление подзадачи
+function addSubtask() {
+    const container = document.getElementById('subtasks_container');
+    const subtaskCount = container.children.length;
+    const subtaskDiv = document.createElement('div');
+    subtaskDiv.classList.add('form-group');
+    subtaskDiv.innerHTML = `
+        <label for="subtask_${subtaskCount}">Subtask ${subtaskCount + 1}</label>
+        <input type="text" class="form-control" id="subtask_${subtaskCount}" name="subtasks[${subtaskCount}][name]" />
+    `;
+    container.appendChild(subtaskDiv);
+}
+
+// Отправка формы с JSON
+function submitForm(event) {
+    event.preventDefault();
+
+    // Получаем данные из формы
+    const userId = document.getElementById('user_select').value;
+    const taskName = document.getElementById('task_name').value;
+    const taskDescription = document.getElementById('task_description').value;
+    const taskDeadline = document.getElementById('task_deadline').value;
+
+    if (!userId || !taskName || !taskDeadline) {
+        alert("Please fill in all required fields.");
+        return;
+    }
+
+    // Формируем объект с данными
+    const jsonData = {
+        user_id: userId,
+        name: taskName,
+        description: taskDescription,
+        deadline: taskDeadline,
+        subtasks: []
+    };
+
+    // Собираем подзадачи
+    const subtasks = document.querySelectorAll('[id^=subtask_]');
+    subtasks.forEach((subtask, index) => {
+        const subtaskName = subtask.value;
+        if (subtaskName) {
+            jsonData.subtasks.push({ name: subtaskName });
+        }
+    });
+
+    // Отправляем данные на сервер в формате JSON
+    fetch(`/admin/add-task/${userId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(jsonData)
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('Task successfully assigned!');
+            window.location.reload();
+        } else {
+            return response.json().then(err => {
+                console.error(err);
+                alert('Failed to assign task. Please check the data.');
+            });
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('Failed to assign task. Please try again.');
+    });
+}
+</script>
+{% endblock %}

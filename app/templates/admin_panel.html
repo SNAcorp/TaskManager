@@ -1,0 +1,411 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Admin Panel</h1>
+    <ul class="nav nav-tabs" id="adminTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="admin-functions-tab" data-toggle="tab" href="#admin-functions" role="tab" aria-controls="admin-functions" aria-selected="true">Admin Functions</a>
+        </li>
+        {% if current_user.is_superuser or current_user.role == "admin" %}
+        <li class="nav-item">
+            <a class="nav-link" id="verification-requests-tab" data-toggle="tab" href="#verification-requests" role="tab" aria-controls="verification-requests" aria-selected="false">Verification Requests</a>
+        </li>
+        {% endif %}
+        {% if current_user.role == "admin" or current_user.is_superuser %}
+        <li class="nav-item">
+            <a class="nav-link" id="all-users-tab" data-toggle="tab" href="#all-users" role="tab" aria-controls="all-users" aria-selected="false">All Users</a>
+        </li>
+        {% endif %}
+    </ul>
+    <div class="tab-content" id="adminTabContent">
+        <div class="tab-pane fade show active" id="admin-functions" role="tabpanel" aria-labelledby="admin-functions-tab">
+            <div class="row mt-3">
+                <!-- Change User Role -->
+                <div class="col-md-4">
+                    <div class="card mb-4 shadow-sm" data-toggle="modal" data-target="#changeRoleModal" style="cursor: pointer;">
+                        <div class="card-body">
+                            <h5 class="card-title">Change User Role</h5>
+                            <p class="card-text">Change the role of a user.</p>
+                            <span class="badge badge-info">Admin</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Block User -->
+                <div class="col-md-4">
+                    <div class="card mb-4 shadow-sm" data-toggle="modal" data-target="#blockUserModal" style="cursor: pointer;">
+                        <div class="card-body">
+                            <h5 class="card-title">Block User</h5>
+                            <p class="card-text">Block a user from accessing the system.</p>
+                            <span class="badge badge-info">Admin</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Unblock User -->
+                <div class="col-md-4">
+                    <div class="card mb-4 shadow-sm" data-toggle="modal" data-target="#unblockUserModal" style="cursor: pointer;">
+                        <div class="card-body">
+                            <h5 class="card-title">Unblock User</h5>
+                            <p class="card-text">Unblock a previously blocked user.</p>
+                            <span class="badge badge-info">Admin</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if current_user.is_superuser or current_user.role == "admin" %}
+        <div class="tab-pane fade" id="verification-requests" role="tabpanel" aria-labelledby="verification-requests-tab">
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <h2>Verification Requests</h2>
+                    <ul class="list-group">
+                        {% for user in unverified_users %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ user.email }}
+                            <button class="btn btn-primary" data-toggle="modal" data-target="#userModal" onclick="loadUserDetails({{ user.id }})">Review Request</button>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% if current_user.role == "admin" or current_user.is_superuser %}
+        <div class="tab-pane fade" id="all-users" role="tabpanel" aria-labelledby="all-users-tab">
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <h2>All Users</h2>
+                    <ul class="list-group">
+                        {% for user in all_users %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ user.email }}
+                            <button class="btn btn-primary" data-toggle="modal" data-target="#viewUserModal" onclick="loadUserViewDetails({{ user.id }})">View User</button>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modals -->
+<!-- Change Role Modal -->
+<div class="modal fade" id="changeRoleModal" tabindex="-1" role="dialog" aria-labelledby="changeRoleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changeRoleModalLabel">Change User Role</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="roleForm">
+                    <div class="form-group">
+                        <label for="user_select">Select user</label>
+                        <select class="form-control" id="user_select" name="user_select">
+                            {% for user in all_users %}
+                            <option value="{{ user.id }}">{{ user.first_name + " " + user.last_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="role">Role</label>
+                        <input type="text" class="form-control" id="role" name="role" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Change Role</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Block User Modal -->
+<div class="modal fade" id="blockUserModal" tabindex="-1" role="dialog" aria-labelledby="blockUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="blockUserModalLabel">Block User</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="blockForm">
+                    <div class="form-group">
+                        <label for="block_user_select">Select user</label>
+                        <select class="form-control" id="block_user_select" name="block_user_select">
+                            {% for user in unblocked_users %}
+                            <option value="{{ user.id }}">{{ user.first_name + " " + user.last_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Block User</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Unblock User Modal -->
+<div class="modal fade" id="unblockUserModal" tabindex="-1" role="dialog" aria-labelledby="unblockUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="unblockUserModalLabel">Unblock User</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="unblockForm">
+                    <div class="form-group">
+                        <label for="unblock_user_select">Select user</label>
+                        <select class="form-control" id="unblock_user_select" name="unblock_user_select">
+                            {% for user in blocked_users %}
+                            <option value="{{ user.id }}">{{ user.first_name + " " + user.last_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Unblock User</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Details Modal -->
+<div class="modal fade" id="userModal" tabindex="-1" role="dialog" aria-labelledby="userModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userModalLabel">User Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="userDetails">
+                <!-- User details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" onclick="rejectUser()">Reject</button>
+                <button type="button" class="btn btn-success" onclick="verifyUser()">Verify</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View/Edit User Modal -->
+<div class="modal fade" id="viewUserModal" tabindex="-1" role="dialog" aria-labelledby="viewUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewUserModalLabel">View/Edit User</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="viewUserDetails">
+                <!-- View user form will be loaded here -->
+            </div>
+            {% if current_user.is_superuser %}
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="enableEditUserBtn" onclick="enableEditUser()">Enable Edit</button>
+                <button type="button" class="btn btn-primary" id="saveUserDetailsBtn" onclick="saveUserDetails()" style="display: none;">Save Changes</button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // JavaScript to handle form submissions
+    document.getElementById('roleForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const userId = document.getElementById('user_select').value;
+        const role = document.getElementById('role').value;
+        const response = await fetch(`/admin/role/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ role: role }),
+        });
+        if (response.ok) {
+            alert('Role updated successfully');
+            location.reload();
+        } else {
+            alert('Error updating role');
+        }
+    });
+
+    document.getElementById('blockForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const userId = document.getElementById('block_user_select').value;
+        const response = await fetch(`/admin/block/${userId}`, {
+            method: 'PUT',
+        });
+        if (response.ok) {
+            alert('User blocked successfully');
+            location.reload();
+        } else {
+            alert('Error blocking user');
+        }
+    });
+
+    document.getElementById('unblockForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const userId = document.getElementById('unblock_user_select').value;
+        const response = await fetch(`/admin/unblock/${userId}`, {
+            method: 'PUT',
+        });
+        if (response.ok) {
+            alert('User unblocked successfully');
+            location.reload();
+        } else {
+            alert('Error unblocking user');
+        }
+    });
+
+    async function loadUserDetails(userId) {
+        const response = await fetch(`/admin/user/${userId}`);
+        if (response.ok) {
+            const user = await response.json();
+            const userDetails = `
+                <ul class="list-group">
+                    <li class="list-group-item"><strong>Email:</strong> ${user.email}</li>
+                    <li class="list-group-item"><strong>First Name:</strong> ${user.first_name}</li>
+                    <li class="list-group-item"><strong>Last Name:</strong> ${user.last_name}</li>
+                    <li class="list-group-item"><strong>Middle Name:</strong> ${user.middle_name}</li>
+                    <li class="list-group-item"><strong>Phone Number:</strong> ${user.phone_number}</li>
+                    <li class="list-group-item"><strong>Role:</strong> ${user.role}</li>
+                    <li class="list-group-item"><strong>Active:</strong> <span class="badge ${user.is_active ? 'badge-success' : 'badge-danger'}">${user.is_active ? 'Yes' : 'No'}</span></li>
+                    <li class="list-group-item"><strong>Verified:</strong> <span class="badge ${user.is_verified ? 'badge-success' : 'badge-danger'}">${user.is_verified ? 'Yes' : 'No'}</span></li>
+                    <li class="list-group-item"><strong>Registration Date:</strong> ${user.registration_date}</li>
+                    <li class="list-group-item"><strong>Block Date:</strong> ${user.block_date}</li>
+                </ul>
+            `;
+            document.getElementById('userDetails').innerHTML = userDetails;
+            document.getElementById('userModal').dataset.userId = user.id;
+        }
+    }
+
+    async function loadUserViewDetails(userId) {
+        const response = await fetch(`/admin/user/${userId}`);
+        if (response.ok) {
+            const user = await response.json();
+            const userDetails = `
+                <form id="viewUserForm">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="view_email">Email</label>
+                            <input type="email" class="form-control" id="view_email" name="email" value="${user.email}" disabled>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="view_first_name">First Name</label>
+                            <input type="text" class="form-control" id="view_first_name" name="first_name" value="${user.first_name}" disabled>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="view_last_name">Last Name</label>
+                            <input type="text" class="form-control" id="view_last_name" name="last_name" value="${user.last_name}" disabled>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="view_middle_name">Middle Name</label>
+                            <input type="text" class="form-control" id="view_middle_name" name="middle_name" value="${user.middle_name}" disabled>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="view_phone_number">Phone Number</label>
+                            <input type="text" class="form-control" id="view_phone_number" name="phone_number" value="${user.phone_number}" disabled>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="view_role">Role</label>
+                            <input type="text" class="form-control" id="view_role" name="role" value="${user.role}" disabled>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="view_is_active">Active</label>
+                            <p class="form-control-plaintext"><span class="badge ${user.is_active ? 'badge-success' : 'badge-danger'}">${user.is_active ? 'Yes' : 'No'}</span></p>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="view_is_verified">Verified</label>
+                            <p class="form-control-plaintext"><span class="badge ${user.is_verified ? 'badge-success' : 'badge-danger'}">${user.is_verified ? 'Yes' : 'No'}</span></p>
+                        </div>
+                    </div>
+                </form>
+            `;
+            document.getElementById('viewUserDetails').innerHTML = userDetails;
+            document.getElementById('viewUserModal').dataset.userId = user.id;
+        }
+    }
+    {% if current_user.is_superuser %}
+    async function enableEditUser() {
+        const form = document.getElementById('viewUserForm');
+        for (let element of form.elements) {
+            if (element.name !== 'email') {
+                element.disabled = false;
+            }
+        }
+        document.getElementById('saveUserDetailsBtn').style.display = 'inline-block';
+        document.getElementById('enableEditUserBtn').style.display = 'none';
+    }
+    {% endif %}
+    async function verifyUser() {
+        const userId = document.getElementById('userModal').dataset.userId;
+        const response = await fetch(`/superadmin/verify/${userId}`, {
+            method: 'PUT',
+        });
+        if (response.ok) {
+            alert('User verified successfully');
+            location.reload();
+        } else {
+            alert('Error verifying user');
+        }
+    }
+
+    async function rejectUser() {
+        const userId = document.getElementById('userModal').dataset.userId;
+        const response = await fetch(`/superadmin/reject/${userId}`, {
+            method: 'PUT',
+        });
+        if (response.ok) {
+            alert('User rejected successfully');
+            location.reload();
+        } else {
+            alert('Error rejecting user');
+        }
+    }
+    {% if current_user.is_superuser %}
+    async function saveUserDetails() {
+        const userId = document.getElementById('viewUserModal').dataset.userId;
+        const form = document.getElementById('viewUserForm');
+        const formData = new FormData(form);
+        const userData = Object.fromEntries(formData.entries());
+        const response = await fetch(`/admin/user/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData),
+        });
+        if (response.ok) {
+            alert('User details updated successfully');
+            location.reload();
+        } else {
+            alert('Error updating user details');
+        }
+    }
+    {% endif %}
+</script>
+{% endblock %}

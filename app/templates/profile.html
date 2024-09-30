@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block link %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+{% endblock %}
+
+{% block style %}
+    .input-group-append .btn {
+        border: none;
+        background: #e9ecef;
+        color: #495057;
+        padding: 0 12px;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        box-shadow: inset -1px 0px 0px 0.8px rgba(207,212,217,1);
+    }
+    .input-group-append .btn:hover {
+        background: #e9ecee;
+    }
+    .input-group-append .btn:focus {
+        box-shadow: none;
+    }
+    .form-control[disabled] {
+        background-color: #e9ecef;
+    }
+    .alert {
+        margin-top: 10px;
+    }
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <h2>User Profile</h2>
+        <div class="form-group">
+            <label for="first_name">First Name</label>
+            <input type="text" class="form-control" id="first_name" value="{{ current_user.first_name }}" disabled>
+        </div>
+        <div class="form-group">
+            <label for="last_name">Last Name</label>
+            <input type="text" class="form-control" id="last_name" value="{{ current_user.last_name }}" disabled>
+        </div>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <div class="input-group">
+                <input type="email" class="form-control" id="email" value="{{ current_user.email }}" disabled>
+                <div class="input-group-append">
+                    <button class="btn" type="button" id="copy-email-btn" onclick="copyToClipboard('email', 'copy-email-btn')">
+                        <i class="far fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="phone_number">Phone Number</label>
+            <div class="input-group">
+                <input type="text" class="form-control" id="phone_number" value="{{ current_user.phone_number }}" disabled>
+                <div class="input-group-append">
+                    <button class="btn" type="button" id="copy-phone-btn" onclick="copyToClipboard('phone_number', 'copy-phone-btn')">
+                        <i class="far fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="alert-container"></div>
+        <button class="btn btn-primary" data-toggle="modal" data-target="#changePasswordModal">Change Password</button>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="changePasswordForm">
+                    <div class="form-group">
+                        <label for="old_password">Current Password</label>
+                        <input type="password" class="form-control" id="old_password" name="old_password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new_password">New Password</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm_password">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                    </div>
+                </form>
+                <div id="modal-alert-container"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="submitChangePasswordForm()">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function copyToClipboard(elementId, buttonId) {
+        var copyText = document.getElementById(elementId);
+        var button = document.getElementById(buttonId);
+        var tempInput = document.createElement("input");
+        tempInput.value = copyText.value;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+        button.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(function() {
+            button.innerHTML = '<i class="far fa-copy"></i>';
+        }, 2000);
+    }
+
+    async function submitChangePasswordForm() {
+        const form = document.getElementById("changePasswordForm");
+        const formData = new FormData(form);
+        const response = await fetch("change-password", {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await response.json();
+        const alertContainer = document.getElementById("alert-container");
+        const modalAlertContainer = document.getElementById("modal-alert-container");
+
+        modalAlertContainer.innerHTML = '';
+        alertContainer.innerHTML = '';
+
+        const alertDiv = document.createElement("div");
+        alertDiv.className = `alert ${result.success ? 'alert-success' : 'alert-danger'}`;
+        alertDiv.textContent = result.message;
+
+        if (result.success) {
+            alertContainer.appendChild(alertDiv);
+            $('#changePasswordModal').modal('hide');
+            form.reset();
+        } else {
+            modalAlertContainer.appendChild(alertDiv);
+        }
+    }
+</script>
+{% endblock %}

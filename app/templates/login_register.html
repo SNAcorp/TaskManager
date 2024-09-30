@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% block style %}
+.form-toggle {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    margin: auto;
+    overflow: hidden;
+    height: 450px;
+}
+
+.form-content {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+form.hide {
+    opacity: 0;
+    transform: translateX(100%);
+    pointer-events: none;
+}
+
+form.show {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+}
+
+.alert {
+    display: none;
+    transition: opacity 0.5s ease;
+    opacity: 0;
+    margin-top: 20px;
+}
+
+.alert.show {
+    display: block;
+    opacity: 1;
+}
+
+.valid-check {
+    display: none;
+}
+
+.valid-check.show {
+    display: inline-block;
+}
+{% endblock %}
+{% block title %}Login/Register{% endblock %}
+
+{% block content %}
+<div class="full-height">
+    <div class="container d-flex justify-content-center align-items-center h-100">
+        <div class="row w-100 justify-content-center">
+            <div class="col-md-6">
+                <div class="card" id="auth-card">
+                    <div class="card-body">
+                        <div class="alert alert-danger" id="login-alert">
+                            Invalid login or password. Please try again.
+                        </div>
+                        <div class="form-toggle position-relative">
+                            <form id="login-form" class="show form-content">
+                                <h2 class="text-center">Login</h2>
+                                <div class="form-group">
+                                    <label for="login-email">Email:</label>
+                                    <input type="email" id="login-email" name="email" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="login-password">Password:</label>
+                                    <input type="password" id="login-password" name="password" class="form-control" required>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-block" onclick="loginUser()">Login</button>
+                            </form>
+                            <form id="register-form-step1" class="hide form-content">
+                                <h2 class="text-center">Register - Step 1</h2>
+                                <div class="form-group">
+                                    <label for="first_name">First Name:</label>
+                                    <input type="text" id="first_name" name="first_name" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="last_name">Last Name:</label>
+                                    <input type="text" id="last_name" name="last_name" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="middle_name">Middle Name:</label>
+                                    <input type="text" id="middle_name" name="middle_name" class="form-control">
+                                </div>
+                                <button type="button" class="btn btn-primary btn-block" onclick="nextStep(2)">Next</button>
+                            </form>
+                            <form id="register-form-step2" class="hide form-content">
+                                <h2 class="text-center">Register - Step 2</h2>
+                                <div class="form-group">
+                                    <label for="register-email">Email:</label>
+                                    <div class="input-group">
+                                        <input type="email" id="register-email" name="email" class="form-control" required>
+                                        <div class="input-group-append">
+                                            <span id="email-check-icon" class="valid-check input-group-text"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="phone_number">Phone Number:</label>
+                                    <input type="tel" id="phone_number" name="phone_number" class="form-control" required>
+                                </div>
+                                <button type="button" class="btn btn-secondary btn-block" onclick="previousStep(1)">Back</button>
+                                <button type="button" id="next-step2-button" class="btn btn-primary btn-block" onclick="nextStep(3)">Next</button>
+                            </form>
+                            <form id="register-form-step3" class="hide form-content">
+                                <h2 class="text-center">Register - Step 3</h2>
+                                <div class="form-group">
+                                    <label for="register-password">Password:</label>
+                                    <input type="password" id="register-password" name="password" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="confirm-password">Confirm Password:</label>
+                                    <input type="password" id="confirm-password" name="confirm_password" class="form-control" required>
+                                </div>
+                                <button type="button" class="btn btn-secondary btn-block" onclick="previousStep(2)">Back</button>
+                                <button type="button" class="btn btn-primary btn-block" onclick="registerUser()">Register</button>
+                            </form>
+                        </div>
+                        <div class="text-center mt-3">
+                            <button id="toggle-button" class="btn btn-link">Don't have an account? Register here</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const toggleButton = document.getElementById('toggle-button');
+    const loginForm = document.getElementById('login-form');
+    const registerFormStep1 = document.getElementById('register-form-step1');
+    const registerFormStep2 = document.getElementById('register-form-step2');
+    const registerFormStep3 = document.getElementById('register-form-step3');
+    const authCard = document.getElementById('auth-card');
+    const loginAlert = document.getElementById('login-alert');
+
+    toggleButton.addEventListener('click', () => {
+        if (loginForm.classList.contains('show')) {
+            loginForm.classList.remove('show');
+            loginForm.classList.add('hide');
+            registerFormStep1.classList.remove('hide');
+            registerFormStep1.classList.add('show');
+            toggleButton.textContent = 'Already have an account? Login here';
+            authCard.style.height = 'auto';
+        } else {
+            loginForm.classList.remove('hide');
+            loginForm.classList.add('show');
+            registerFormStep1.classList.remove('show');
+            registerFormStep1.classList.add('hide');
+            registerFormStep2.classList.remove('show');
+            registerFormStep2.classList.add('hide');
+            registerFormStep3.classList.remove('show');
+            registerFormStep3.classList.add('hide');
+            toggleButton.textContent = "Don't have an account? Register here";
+            authCard.style.height = 'auto';
+        }
+    });
+
+    function nextStep(step) {
+        if (step === 2) {
+            registerFormStep1.classList.remove('show');
+            registerFormStep1.classList.add('hide');
+            registerFormStep2.classList.remove('hide');
+            registerFormStep2.classList.add('show');
+        } else if (step === 3) {
+            registerFormStep2.classList.remove('show');
+            registerFormStep2.classList.add('hide');
+            registerFormStep3.classList.remove('hide');
+            registerFormStep3.classList.add('show');
+        }
+        authCard.style.height = 'auto';
+    }
+
+    function previousStep(step) {
+        if (step === 1) {
+            registerFormStep2.classList.remove('show');
+            registerFormStep2.classList.add('hide');
+            registerFormStep1.classList.remove('hide');
+            registerFormStep1.classList.add('show');
+        } else if (step === 2) {
+            registerFormStep3.classList.remove('show');
+            registerFormStep3.classList.add('hide');
+            registerFormStep2.classList.remove('hide');
+            registerFormStep2.classList.add('show');
+        }
+        authCard.style.height = 'auto';
+    }
+
+    async function registerUser() {
+        const step1Data = {
+            first_name: document.getElementById('first_name').value,
+            last_name: document.getElementById('last_name').value,
+            middle_name: document.getElementById('middle_name').value
+        };
+
+        const step2Data = {
+            email: document.getElementById('register-email').value,
+            phone_number: document.getElementById('phone_number').value
+        };
+
+        const step3Data = {
+            password: document.getElementById('register-password').value,
+            confirm_password: document.getElementById('confirm-password').value
+        };
+
+        const data = {
+            ...step1Data,
+            ...step2Data,
+            ...step3Data
+        };
+
+        try {
+            const response = await fetch('/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                alert(response.json())
+                throw new Error('Network response was not ok');
+            }
+
+            if (response.redirected) {
+                window.location.href = response.url;  // Перенаправление на новую страницу
+            } else if (response.status === 403) {
+                window.location.href = response.url;
+            }
+
+        } catch (error) {
+            console.error('There was a problem with the fetch operation:', error);
+        }
+    }
+
+    async function loginUser() {
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        const data = {
+            email,
+            password
+        };
+
+        console.log("Sending data:", data); // Логирование данных
+
+        try {
+            const response = await fetch('/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.status === 400) {
+                // Показать алерт при неверном логине или пароле
+                showLoginAlert();
+            } else if (response.redirected) {
+                window.location.href = response.url;  // Перенаправление на новую страницу
+            } else if (response.status === 403) {
+                window.location.href = response.url;
+            }
+        } catch (error) {
+            console.error('There was a problem with the fetch operation:', error);
+        }
+    }
+
+    function showLoginAlert() {
+        loginAlert.classList.add('show');
+        authCard.style.height = 'auto';
+
+        setTimeout(() => {
+            loginAlert.classList.remove('show');
+        }, 30000); // Скрыть алерт через 30 секунд
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loginForm.classList.add('show');
+        authCard.style.height = 'auto';
+    });
+</script>
+{% endblock %}

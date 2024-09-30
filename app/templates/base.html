@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}S.N.A. Task Manager{% endblock %}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    {% block link %}{% endblock %}
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        main {
+            flex: 1;
+        }
+        .burger-menu {
+            display: none;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1050;
+        }
+        .burger-menu span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            margin: 5px;
+            background-color: #000;
+            transition: 0.4s;
+        }
+        .menu-content {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 250px;
+            height: 100%;
+            background: #fff;
+            transition: 0.4s;
+            padding-top: 60px;
+            z-index: 1040;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+        .menu-content ul {
+            list-style: none;
+            padding: 0;
+        }
+        .menu-content ul li {
+            margin: 10px 0;
+        }
+        .menu-content ul li a {
+            text-align: right;
+            color: #000;
+            text-decoration: none;
+            display: block;
+            padding: 10px 20px;
+            border-radius: 5px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 1) 0%, rgba(245, 245, 245, 1) 100%);
+            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+        }
+        .menu-content ul li a:hover {
+            background-color: #f8f9fa;
+            color: #007bff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .open .line1 {
+            transform: rotate(-45deg) translate(-5px, 6px);
+        }
+        .open .line2 {
+            opacity: 0;
+        }
+        .open .line3 {
+            transform: rotate(45deg) translate(-5px, -6px);
+        }
+        .open-menu {
+            right: 0;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s, visibility 0.4s;
+            z-index: 1030;
+        }
+        .overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        /* Notification bell styles */
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+        }
+        .notification-bell .bell-icon {
+            font-size: 24px;
+        }
+        .notification-bell .unread-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            border-radius: 50%;
+            display: none;
+        }
+        .notification-bell.has-unread .unread-badge {
+            display: block;
+        }
+
+        @media (max-width: 992px) {
+            .burger-menu {
+                display: block;
+            }
+            .navbar-nav {
+                display: none;
+            }
+        }
+        .notification-popup {
+        position: absolute;
+        top: 50px;
+        right: 20px;
+        width: 300px;
+        max-height: 400px;
+        background-color: white;
+        box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        display: none;
+        overflow-y: auto;
+        z-index: 1050;
+        padding: 15px;
+    }
+
+    .notification-popup.show {
+        display: block;
+    }
+
+    .notification-popup h5 {
+        margin: 0;
+        padding-bottom: 10px;
+        font-weight: bold;
+    }
+
+    .notification-popup .notification {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .notification-popup .notification:last-child {
+        border-bottom: none;
+    }
+
+    .notification-popup .notification p {
+        margin: 0;
+    }
+
+    .notification-popup .notification small {
+        color: #888;
+    }
+
+    .notification-popup .no-notifications {
+        text-align: center;
+        padding: 20px;
+        font-size: 16px;
+        color: #888;
+    }
+
+    .notification-bell {
+        position: relative;
+        cursor: pointer;
+    }
+
+    .notification-bell .unread-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        width: 10px;
+        height: 10px;
+        background-color: red;
+        border-radius: 50%;
+        display: none;
+    }
+
+    .notification-bell.has-unread .unread-badge {
+        display: block;
+    }
+    /* Мобильная версия */
+    @media (max-width: 992px) {
+        .burger-menu {
+            display: block;
+        }
+
+        .navbar-nav {
+            display: none;
+        }
+
+        /* Перемещаем значок уведомлений левее бургер-меню */
+        .notification-bell {
+            position: absolute;
+            top: 15px;
+            right: 70px;  /* Устанавливаем отступ от края экрана и бургер-меню */
+        }
+    }
+        {% block style %}{% endblock %}
+    </style>
+
+</head>
+<body>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="/">Task Manager</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+
+                    {% if current_user %}
+                        <li class="nav-item"><a class="nav-link" href="/tasks">My Tasks</a></li>
+                        {% if current_user.role == "admin" %}
+                            <li class="nav-item"><a class="nav-link" href="/admin/panel">Admin Panel</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/admin/add-task">Add Task</a></li>
+                        {% endif %}
+                        {% if current_user.is_superuser %}
+                            <li class="nav-item"><a class="nav-link" href="/admin/add-task">Add Task</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/admin/panel">Admin Panel</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/logs">Logs</a></li>
+                        {% endif %}
+                        <li class="nav-item"><a class="nav-link" href="/users/me">My Profile</a></li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="/login">Login/Register</a></li>
+                    {% endif %}
+                    <li class="nav-item"><a class="nav-link" href="/support">Support</a></li>
+                </ul>
+            </div>
+            <div class="burger-menu" id="burger-menu">
+                <span class="line1"></span>
+                <span class="line2"></span>
+                <span class="line3"></span>
+            </div>
+            <div class="menu-content" id="menu-content">
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    {% if current_user %}
+                        <li><a href="/tasks">My Tasks</a></li>
+                        {% if current_user.role == "admin" %}
+                            <li><a href="/admin/panel">Admin Panel</a></li>
+                            <li><a href="/admin/add-task">Add Task</a></li>
+                        {% endif %}
+                        {% if current_user.is_superuser %}
+                            <li><a href="/admin/panel">Admin Panel</a></li>
+                            <li><a href="/logs">Logs</a></li>
+                            <li><a href="/admin/add-task">Add Task</a></li>
+                        {% endif %}
+                        <li><a href="/users/me">My Profile</a></li>
+                    {% else %}
+                        <li><a href="/login">Login/Register</a></li>
+                    {% endif %}
+                    <li><a href="/support">Support</a></li>
+                </ul>
+            </div>
+            <div class="overlay" id="overlay"></div>
+            <!-- Notification bell -->
+            {% if current_user %}
+            <div class="notification-bell" id="notificationBell">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" style="width: 24px; height: 24px;">
+                    <path d="M224 0c-17.7 0-32 14.3-32 32l0 19.2C119 66 64 130.6 64 208l0 25.4c0 45.4-15.5 89.5-43.8 124.9L5.3 377c-5.8 7.2-6.9 17.1-2.9 25.4S14.8 416 24 416l400 0c9.2 0 17.6-5.3 21.6-13.6s2.9-18.2-2.9-25.4l-14.9-18.6C399.5 322.9 384 278.8 384 233.4l0-25.4c0-77.4-55-142-128-156.8L256 32c0-17.7-14.3-32-32-32zm0 96c61.9 0 112 50.1 112 112l0 25.4c0 47.9 13.9 94.6 39.7 134.6L72.3 368C98.1 328 112 281.3 112 233.4l0-25.4c0-61.9 50.1-112 112-112zm64 352l-64 0-64 0c0 17 6.7 33.3 18.7 45.3s28.3 18.7 45.3 18.7s33.3-6.7 45.3-18.7s18.7-28.3 18.7-45.3z"/>
+                </svg>
+                <div class="unread-badge"></div>
+            </div>
+            {% endif %}
+        </nav>
+    </header>
+    <main class="container mt-4">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="footer py-3 bg-light" style="margin-bottom: 0">
+        <div class="container">
+            <span class="text-muted">&copy; powered by S.N.A. 2024 All rights reserved. </span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    {% if current_user %}
+    <script>
+
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const notificationBell = document.getElementById('notificationBell');
+        const notificationPopup = document.createElement('div');
+        notificationPopup.classList.add('notification-popup');
+        document.body.appendChild(notificationPopup);
+
+        notificationBell.addEventListener('click', async function () {
+            // Показываем/скрываем всплывающее окно с уведомлениями
+            notificationPopup.classList.toggle('show');
+
+            // Если окно было открыто, загружаем уведомления
+            if (notificationPopup.classList.contains('show')) {
+                const response = await fetch('/notifications?user_id={{ current_user.id }}');
+                const notifications = await response.json();
+
+                // Очищаем старые уведомления
+                notificationPopup.innerHTML = '<h5 style="text-align: center">Уведомления</h5>';
+
+                if (notifications.length > 0) {
+                    notifications.forEach(notification => {
+                        const notificationElement = document.createElement('div');
+                        notificationElement.classList.add('notification');
+                        notificationElement.innerHTML = `
+                            <p>${notification.content}</p>
+                            <small>${new Date(notification.creation_date).toLocaleString()}</small>
+                        `;
+                        notificationPopup.appendChild(notificationElement);
+                    });
+                } else {
+                    notificationPopup.innerHTML += '<div class="no-notifications">Нет новых уведомлений</div>';
+                }
+            }
+        });
+
+        document.getElementById('burger-menu').addEventListener('click', function () {
+            this.classList.toggle('open');
+            document.getElementById('menu-content').classList.toggle('open-menu');
+            document.getElementById('overlay').classList.toggle('show');
+            notificationPopup.classList.remove('show');
+        });
+
+        document.getElementById('overlay').addEventListener('click', function () {
+            document.getElementById('burger-menu').classList.remove('open');
+            document.getElementById('menu-content').classList.remove('open-menu');
+            this.classList.remove('show');
+        });
+
+        // Проверка наличия непрочитанных уведомлений
+        async function checkNotifications() {
+            const response = await fetch('/notifications/check_unread?user_id={{ current_user.id }}');
+            const { has_unread } = await response.json();
+
+            if (has_unread) {
+                notificationBell.classList.add('has-unread');
+            } else {
+                notificationBell.classList.remove('has-unread');
+            }
+        }
+
+        checkNotifications();
+        setInterval(checkNotifications, 30000);  // Проверяем каждые 60 секунд
+    });
+</script>
+    {% endif %}
+
+</body>
+</html>
