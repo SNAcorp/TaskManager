@@ -23,4 +23,4 @@ RUN chmod +x /wait-for-it.sh
 
 RUN mkdir -p /images
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]

@@ -23,7 +23,7 @@ services:
     build: .
     command: /wait-for-it.sh db-tasks:5432 -- uvicorn app.main:app --host 0.0.0.0 --port 80
     ports:
-      - "80:80"
+      - "8001:8001"
     depends_on:
       - db-tasks
       - redis-tasks
