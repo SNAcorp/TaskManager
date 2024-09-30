@@ -39,7 +39,7 @@ services:
       - SPECIAL_TOKEN=klsjdvklsjdf9wndj2jfpa2-ifj232j
       - REDIS_HOST=redis
       - REDIS_PORT=6380
-      - TELEGRAM_BOT_URL=http://0.0.0.0:8012/send_message
+      - TELEGRAM_BOT_URL=http://51.250.37.160:8012/send_message
     volumes:
       - images:/images
       - logs:/logs
