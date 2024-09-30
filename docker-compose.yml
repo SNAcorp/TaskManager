@@ -13,7 +13,7 @@ services:
   redis-tasks:
     image: "redis:alpine"
     ports:
-      - "6379:6379"
+      - "6380:6380"
     volumes:
       - redis_data:/data
     networks:
@@ -21,7 +21,7 @@ services:
 
   web-tasks:
     build: .
-    command: /wait-for-it.sh db-tasks:5432 -- uvicorn app.main:app --host 0.0.0.0 --port 80
+    command: /wait-for-it.sh db-tasks:5432 -- uvicorn app.main:app --host 0.0.0.0 --port 8001
     ports:
       - "8001:8001"
     depends_on:
@@ -38,7 +38,7 @@ services:
       - ACCESS_TOKEN_EXPIRE_MINUTES=600
       - SPECIAL_TOKEN=klsjdvklsjdf9wndj2jfpa2-ifj232j
       - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - REDIS_PORT=6380
       - TELEGRAM_BOT_URL=http://localhost:8012/send_message
     volumes:
       - images:/images

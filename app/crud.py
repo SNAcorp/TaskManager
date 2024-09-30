@@ -17,6 +17,9 @@ from app.models import (User)
 from app.schemas import (UserCreate)
 from app.logging_config import (log)
 
+import phonenumbers
+from phonenumbers import PhoneNumberFormat
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 TELEGRAM_BOT_URL = os.getenv("TELEGRAM_BOT_URL")
 
@@ -282,6 +285,20 @@ async def get_users(request: Request,
     return result.scalars().all()
 
 
+def normalize_phone_number(phone_number):
+    # Парсим номер в стандарт E164, предполагая, что номер российский (+7)
+    parsed_number = phonenumbers.parse(phone_number, "RU")
+
+    # Проверяем, является ли номер валидным
+    if not phonenumbers.is_valid_number(parsed_number):
+        raise ValueError("Неверный формат номера телефона")
+
+    # Приводим к международному формату, заменяем +7 на 7
+    formatted_number = phonenumbers.format_number(parsed_number, PhoneNumberFormat.E164)
+
+    # Приводим к формату 79...
+    return formatted_number.replace("+7", "7")
+
 async def create_user(request: Request,
                       user: UserCreate,
                       db: AsyncSession,
@@ -313,7 +330,7 @@ async def create_user(request: Request,
             first_name=user.first_name.strip().lower(),
             last_name=user.last_name.strip().lower(),
             middle_name=user.middle_name.strip().lower(),
-            phone_number=user.phone_number,
+            phone_number=normalize_phone_number(user.phone_number),
             role="superadmin",
             is_verified=True,
             is_superuser=True
