@@ -211,7 +211,38 @@
             right: 70px;  /* Устанавливаем отступ от края экрана и бургер-меню */
         }
     }
-        {% block style %}{% endblock %}
+
+    .allow-popup {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 300px;
+        padding: 20px;
+        background-color: white;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        display: none;
+        z-index: 9999;
+    }
+
+    .allow-popup h5 {
+        margin: 0;
+        padding-bottom: 10px;
+    }
+
+    .allow-popup button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .allow-popup button:hover {
+        background-color: #0056b3;
+    }
+    {% block style %}{% endblock %}
     </style>
 
 </head>
@@ -292,15 +323,42 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     {% if current_user %}
+    <div class="allow-popup" id="notificationAllowingPopup">
+        <h5>Хотите получать уведомления?</h5>
+        <p>Переходите по ссылке для подписки!</p>
+        <button id="subscribeButton">Подписаться</button>
+    </div>
     <script>
 
+    function hasPopupBeenShown() {
+            return localStorage.getItem('popup_shown') === 'true';
+        }
 
+    function markPopupAsShown() {
+        localStorage.setItem('popup_shown', 'true');
+    }
 
     document.addEventListener('DOMContentLoaded', function () {
         const notificationBell = document.getElementById('notificationBell');
         const notificationPopup = document.createElement('div');
         notificationPopup.classList.add('notification-popup');
         document.body.appendChild(notificationPopup);
+
+
+        const notificationAllowingPopup = document.getElementById('notificationAllowingPopup');
+        const subscribeButton = document.getElementById('subscribeButton');
+
+        if (!hasPopupBeenShown()) {
+            notificationAllowingPopup.style.display = 'block';
+        }
+
+        subscribeButton.addEventListener('click', function () {
+            window.location.href = 'https://t.me/sna_notification_bot?start=true';
+            markPopupAsShown();
+            notificationAllowingPopup.style.display = 'none';
+        });
+
+
 
         notificationBell.addEventListener('click', async function () {
             // Показываем/скрываем всплывающее окно с уведомлениями

@@ -632,7 +632,8 @@ async def send_notification(phone_number: str, message: str) -> None:
         response = await client.post(TELEGRAM_BOT_URL, json=data)
 
     if response.status_code != 200:
-        log.bind(type="admins").info("NOTIFICATIONS" + response.text)
+        if response.status_code == 404:
+            pass
         raise HTTPException(status_code=response.status_code, detail="Failed to send notification to Telegram.")
 
 async def send_notifications(notifications: dict) -> None:
