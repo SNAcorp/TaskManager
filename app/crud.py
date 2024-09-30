@@ -342,7 +342,7 @@ async def create_user(request: Request,
             first_name=user.first_name.strip().lower(),
             last_name=user.last_name.strip().lower(),
             middle_name=user.middle_name.strip().lower(),
-            phone_number=user.phone_number
+            phone_number=normalize_phone_number(user.phone_number)
         )
     db.add(db_user)
     await db.flush()  # Flush to ensure that db_user gets an ID
@@ -607,6 +607,7 @@ async def update_user(request: Request,
     old_data = user_to_dict(user)
     for key, value in user_data.items():
         setattr(user, key, value)
+    user.phone_number = normalize_phone_number(str(user.phone_number))
     db.add(user)
     await db.commit()
     log.bind(type="admins",
