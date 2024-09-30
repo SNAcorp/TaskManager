@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 from app.database import (get_db)
 from app.models import Task, Subtask, User, Notification
 from app.schemas import (TaskCreate, TaskUpdate)
-from app.crud import (get_users, hash_func, send_notifications)
+from app.crud import (get_users, hash_func, send_notifications, send_notification)
 from app.dependencies import (get_current_user, get_admin_user)
 from app.templates import app_templates
 from app.utils import (verify_password)
@@ -79,13 +79,13 @@ async def complete_task(task_id: int, current_user: User = Depends(get_current_u
     await db.flush()
 
     db_task.is_completed = not db_task.is_completed
-    await db.commit()
     result = await db.execute(select(User).filter(User.id == db_task.assigner_id))
     assigner = result.scalars().first()
-    result = await db.execute(select(User).filter(User.id == db_task.assigner_id))
-    user = result.scalars().first()
-    await send_notifications({assigner.phone_number: f"Task: '{db_task.name}' has been completed",
-                              user.phone_number: f"Task '{db_task.name}' has been completed"})
+    await send_notification(assigner.phone_number, f"Task: '{db_task.name}' has been completed")
+
+    await db.commit()
+
+
     return {"message": "Task completed successfully"}
 
 

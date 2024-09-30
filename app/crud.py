@@ -21,7 +21,7 @@ import phonenumbers
 from phonenumbers import PhoneNumberFormat
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-TELEGRAM_BOT_URL = os.getenv("TELEGRAM_BOT_URL")
+TELEGRAM_BOT_URL = "http://51.250.37.160:8012/send_message"
 
 async def get_user(request: Request,
                    user_id: int,
@@ -624,14 +624,15 @@ async def update_user(request: Request,
 async def send_notification(phone_number: str, message: str) -> None:
 
     data = {
-        'phone_number': phone_number,
-        'message': message
+        'message': message,
+        'phone_number': phone_number
     }
 
     async with httpx.AsyncClient() as client:
-        response = await client.post(TELEGRAM_BOT_URL, data=data)
+        response = await client.post(TELEGRAM_BOT_URL, json=data)
 
     if response.status_code != 200:
+        log.bind(type="admins").info("NOTIFICATIONS" + response.text)
         raise HTTPException(status_code=response.status_code, detail="Failed to send notification to Telegram.")
 
 async def send_notifications(notifications: dict) -> None:
