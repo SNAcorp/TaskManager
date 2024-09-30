@@ -44,8 +44,6 @@ app.include_router(logs.router, prefix="/logs", tags=["logs"])
 app.include_router(tasks.router, prefix="/tasks", tags=["tasks"])
 app.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
 @app.on_event("startup")
 async def startup():
     """
